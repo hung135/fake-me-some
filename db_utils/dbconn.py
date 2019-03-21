@@ -100,7 +100,7 @@ class Connection:
                 # 'mysql+pymysql://root:test@192.168.99.100:3306/mysql'
                 self.url = "mysql+pymysql://{}:{}@{}:{}/{}?charset=utf8"
                 self.url = self.url.format(self._userid, self._password, self._host, self._port, self._database_name)
-                self._sqlalchemy_con = sqlalchemy.create_engine(self.url,fast_executemany=True)
+                self._sqlalchemy_con = sqlalchemy.create_engine(self.url)
 
             # con=self._connect_mssql()
             # The return value of create_engine() is our connection object

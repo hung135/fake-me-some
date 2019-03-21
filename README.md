@@ -14,7 +14,7 @@ This will make a csv file for each table with 1000 rows
 - python fake-me-some.py --log_level='INFO' --output=CSV --num_rows=1000 --yaml=sample.yaml
 
 This will make a parquet file for each table with 1000 rows
-- python fake-me-some.py --log_level='INFO' --output=CSV --num_rows=1000 --yaml=sample.yaml
+- python fake-me-some.py --log_level='INFO' --output=PARQUET --num_rows=1000 --yaml=sample.yaml
 - 
 PYTHON Environement Setup:
 - virtualenv -p /usr/bin/python ~/.py27
