@@ -54,9 +54,6 @@ def random_string_generator(str_size, allowed_chars=None):
 #function to derive a function to generate data and return that function to be called later
 def fake_data(data_type):
     from faker import Faker
-
-    print(data_type)
- 
     dynamic_module_path="faker.providers.{}"
     module=None
     func_name=None
@@ -104,7 +101,7 @@ def map_fake_functions(root,yaml_data):
                     else:
                         def rnd_int(start=0,end_max=sys.maxint):
                             key_num = random.SystemRandom()
-                            return key_num.randint(0, sys.maxint)
+                            return key_num.randint(0, 65045)
                              
                         t[col]=rnd_int
         else:
@@ -127,13 +124,23 @@ def merge_dict_file(tables,file,yaml_data):
         with open(file, 'a') as outfile:
             yaml.dump(tables, outfile, default_flow_style=False)
     else:
-    
+        #loop through every tables found in DB
         for tbl in tables[root].keys():
             t=tables[root][tbl]
-            for col in t.keys():
-                 
-                if file_yaml[root][tbl].get(col,None) is None:
-                    file_yaml[root][tbl][col]=t[col]
+            #check to see if table is in yaml file
+            #if not add everything in
+            file_yaml_tbl=file_yaml[root].get(tbl,None)
+            if file_yaml_tbl is None:
+                print("addding to yaml ",tbl)
+                file_yaml[root][tbl]=t
+                
+            else:           
+                # since table exist loop through each column
+                for col in t.keys():
+                    #if column doesn't exist in yaml add the column
+                    if file_yaml[root][tbl].get(col,None) is None:
+                        file_yaml[root][tbl][col]=t[col]
+
         if file_yaml.get('db',None) is None:
             file_yaml['db']=db
         with open(file, 'w') as outfile:
@@ -171,7 +178,33 @@ def parse_cli_args():
     return args
 
 def fake_some_data_parquet(file_path,table,num_rows):
-    pass
+    import numpy as np
+    import pandas as pd
+    import pyarrow as pa
+    import pyarrow.parquet as pq
+ 
+    #make row for each 
+    rows=[]
+    for _ in range(num_rows):
+        row=[]
+        for col in table.keys():
+            data=table[col]()
+            row.append(data)
+        rows.append(row)
+    header=[col for col in table.keys()]    
+    
+     
+    df=pd.DataFrame.from_records(rows, columns=header)
+    
+    # df = pd.DataFrame({'one': [-1, np.nan, 2.5],
+    #                 'two': ['foo', 'bar', 'baz'],
+    #                 'three': [True, False, True]},
+    #                 index=list('abc'))
+ 
+
+    table = pa.Table.from_pandas(df)
+    pq.write_table(table, file_path)
+    
 
 def fake_some_data_db(table_name,table,num_rows,db_conn):
     import pandas as pd
@@ -190,7 +223,7 @@ def fake_some_data_db(table_name,table,num_rows,db_conn):
     engine,meta=db_conn.connect_sqlalchemy()
     tbl=table_name.split('.')[1]
     print("Inserting {} rows into {}".format(num_rows,table_name))
-    pd.to_sql(table_name,engine,if_exists='append')
+    pd.to_sql(tbl,engine,if_exists='append',index=False)
     
         
         
