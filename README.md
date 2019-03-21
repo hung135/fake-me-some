@@ -15,3 +15,10 @@ This will make a csv file for each table with 1000 rows
 
 This will make a parquet file for each table with 1000 rows
 - python fake-me-some.py --log_level='INFO' --output=CSV --num_rows=1000 --yaml=sample.yaml
+- 
+PYTHON Environement Setup:
+- virtualenv -p /usr/bin/python ~/.py27
+- source ~/.py27/bin/activate
+- pip install -r requirements.txt
+- export MSPASSWORD=whateveryourpasswordis
+- -MSPASSWORD is defined in your config.yaml file, you can make it whatever you want
