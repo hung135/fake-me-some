@@ -11,7 +11,7 @@ import pyarrow
 lg.basicConfig()
 logging = lg.getLogger()
 # logging.setLevel(lg.INFO)
-logging.setLevel(lg.DEBUG)
+logging.setLevel(lg.INFO)
   
 WORKINGPATH=os.environ.get('WORKINGPATH',None)
 
@@ -27,7 +27,7 @@ def set_log_level(debug_level):
 # run through the yaml and replace embedded params
 def pre_process_yaml(yaml_file):
     # yaml_file = os.path.abspath(yaml_file)
-    yaml_data = yaml.load(open(yaml_file))
+    yaml_data = yaml.full_load(open(yaml_file))
     
     source_db = yaml_data['db']['connection']
     src_db=None
@@ -177,7 +177,7 @@ def parse_cli_args():
     parser.add_argument('--generate_yaml',default=None,help='file name of yaml to create queries database for tables and columns')
     parser.add_argument('--num_rows', default=10,help='Prints out cardinality of analyzeed columns')
     parser.add_argument('--output',default='CSV',help='output data to CSV, DB, PARQUET')
-    parser.add_argument('--log_level', default='DEBUG',
+    parser.add_argument('--log_level', default='INFO',
                         help='Default Log Level')
     args = parser.parse_args()
     return args
@@ -226,9 +226,9 @@ def fake_some_data_db(table_name,table,num_rows,db_conn):
      
     pd=pd.DataFrame.from_records(rows, columns=header)
     engine=db_conn.connect_SqlAlchemy()
-    tbl=table_name.split('.')[1]
-    print("Inserting {} rows into {}".format(num_rows,table_name))
-    pd.to_sql(tbl,engine,if_exists='append',index=False)
+      
+    pd.to_sql(table_name,engine,if_exists='append',index=False,schema=db_conn.schema)
+    
 
 def get_table_column_types(db, table_name, trg_schema=None):
 
