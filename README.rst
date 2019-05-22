@@ -3,13 +3,15 @@ fake-me-some
 ============
 
 
-Add a short description here!
+CLI to fake some data to CSV, Database, or Parquet
 
 
 Description
 ===========
 
 A longer description of your project goes here...
+Go Here and Read and bash me or thank me
+https://github.com/hung135/fake-me-some
 
 
 Note
