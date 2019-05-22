@@ -5,7 +5,7 @@ import shutil
 import sys
 import pprint
 import logging as lg  
-import db_utils
+from py_dbutils.rdbms import postgres 
 import pyarrow
   
 lg.basicConfig()
@@ -28,17 +28,19 @@ def set_log_level(debug_level):
 def pre_process_yaml(yaml_file):
     # yaml_file = os.path.abspath(yaml_file)
     yaml_data = yaml.load(open(yaml_file))
-    log_level = args.log_level
+    
     source_db = yaml_data['db']['connection']
-
-    src_db = db_utils.dbconn.Connection(host=source_db['host'],
+    src_db=None
+    if source_db['type']=='POSTGRES':
+        src_db = postgres.DB(host=source_db['host'],
                                         port=source_db['port'],
-                                        database=source_db['db'],
-                                        dbschema=source_db['schema'],
+                                        dbname=source_db['db'],
+                                        schema=source_db['schema'],
                                         userid=source_db['userid'],
-                                        password=os.environ.get(source_db['password_envir_var'],None),
-                                        dbtype=source_db['type'],
-                                        appname=source_db['appname'])
+                                        pwd=os.environ.get(source_db['password_envir_var'],None) )
+    else:
+        print('Error Non Supported Database: {}'.format(source_db['type']))
+        sys.exit(1)
     
     return yaml_data, src_db
 
@@ -99,7 +101,7 @@ def map_fake_functions(root,yaml_data):
                         t[col]=rnd_str
                         
                     else:
-                        def rnd_int(start=0,end_max=sys.maxint):
+                        def rnd_int(start=0,end_max=sys.maxsize):
                             key_num = random.SystemRandom()
                             return key_num.randint(0, 65045)
                              
@@ -237,22 +239,27 @@ def fake_some_data_csv(file_path,table,num_rows):
             data=table[col]()
             row.append(data)
         rows.append(row)
-    header=[col for col in table.keys()]    
+    header=[col.encode() for col in table.keys()]    
     import csv
      
-    with open(file_path,'wb') as f:
-        print("writing file: ",file_path)
+    with open(file_path,'w') as f:
+        print("writing file: ",os.path.abspath(file_path))
         wr = csv.writer(f)
         wr.writerow(header)
         wr.writerows(rows)
  
-
-if __name__ == '__main__':
+def main(yamlfile=None):
     # process_list = []
     args = parse_cli_args()
     # multi process here for now
     # process_yaml(args.yaml, args.log_level)
-    yaml_file = os.path.abspath(args.yaml)
+    yaml_file = None
+    if not yamlfile is None:
+        yaml_file=os.path.abspath(yamlfile)
+    else:
+        yaml_file = os.path.abspath(args.yaml)
+    
+    
     yaml_data = yaml.full_load(open(yaml_file))
     logging.info('Read YAML file: \n\t\t{}'.format(yaml_file))
     set_log_level(args.log_level)
@@ -273,4 +280,7 @@ if __name__ == '__main__':
                     fake_some_data_db(table,t,int(args.num_rows),db_conn)
                 else:
                     print("unknow output so skipping table: {}".format(table))
+if __name__ == '__main__':
+    main()
+    
  
