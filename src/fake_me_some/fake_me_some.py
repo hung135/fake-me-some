@@ -151,11 +151,14 @@ def merge_dict_file(tables,file,yaml_data):
 def generate_yaml_from_db(db_conn,file_fqn,yaml_data):
 
     fqn=os.path.abspath(file_fqn)
-    table_list=db_conn.get_table_list_via_query(db_conn.dbschema)
+    table_list=db_conn.get_all_tables()
     tbl={}
+     
     for t in table_list:
-        cols=db_conn.get_table_column_types(t)
-        tbl[str(db_conn.dbschema+"."+t)]=cols
+        if t.startswith(db_conn.schema+'.'):
+           
+            cols=get_table_column_types(db_conn,t)
+            tbl[str(db_conn.dbschema+"."+t)]=cols
     tables={"Tables":tbl}
    
     
@@ -222,12 +225,38 @@ def fake_some_data_db(table_name,table,num_rows,db_conn):
     
      
     pd=pd.DataFrame.from_records(rows, columns=header)
-    engine,meta=db_conn.connect_sqlalchemy()
+    engine=db_conn.connect_SqlAlchemy()
     tbl=table_name.split('.')[1]
     print("Inserting {} rows into {}".format(num_rows,table_name))
     pd.to_sql(tbl,engine,if_exists='append',index=False)
-    
-        
+
+def get_table_column_types(db, table_name, trg_schema=None):
+
+        import sqlalchemy, pprint
+        if trg_schema is None:
+            schema = db.schema
+        else:
+            schema = trg_schema
+        con  = db.connect_SqlAlchemy()
+        schema_meta = sqlalchemy.MetaData(bind=con, 
+                    reflect=True, schema=schema)
+        table = sqlalchemy.Table(table_name, schema_meta, schema=schema, autoload=True, autoload_with=con)
+        cols={}
+        for col in table.columns:
+            col_length=None
+            try:
+                
+                col_length=col.type.length
+            except:
+                pass
+            str_type=str(col.type.python_type) 
+            str_type=str_type.replace('>','')
+            str_type=str_type.replace("<",'')
+            str_type=str_type.replace("type",'')
+            str_type=str_type.replace("'",'').strip()
+            str_len=(','+str(col_length)) if col_length is not None else ''
+            cols[str(col).split('.')[-1]]=str_type+str_len
+        return cols       
         
 def fake_some_data_csv(file_path,table,num_rows):
     
