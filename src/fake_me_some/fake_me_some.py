@@ -279,11 +279,16 @@ def fake_some_data_csv(file_path,table,num_rows):
         wr.writerow(header)
         wr.writerows(rows)
  
-def main(yamlfile=None,p_output=None,p_generate=None):
+def main(yamlfile=None,p_output=None,p_generate=None,out_path=None):
     # process_list = []
     args = parse_cli_args()
     # multi process here for now
     # process_yaml(args.yaml, args.log_level)
+    path=None
+    if out_path is None:
+        path=os.getcwd()
+    else:
+        path=os.path.abspath(out_path)
     yaml_file = None
     if not yamlfile is None:
         yaml_file=os.path.abspath(yamlfile)
@@ -305,9 +310,9 @@ def main(yamlfile=None,p_output=None,p_generate=None):
             if t is not None:
                 if output=='CSV':
                     print("OUTPUT TO CSV:")
-                    fake_some_data_csv(table+'.csv',t,int(args.num_rows))
+                    fake_some_data_csv(os.path.join(path,table+'.csv'),t,int(args.num_rows))
                 elif output=='PARQUET':
-                    fake_some_data_parquet(table+'.parquet',t,int(args.num_rows))
+                    fake_some_data_parquet(os.path.join(path,table+'.parquet'),t,int(args.num_rows))
                 elif output=='DB':
                     print("OUTPUT TO DATABASE:")
                     fake_some_data_db(table,t,int(args.num_rows),db_conn)
