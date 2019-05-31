@@ -158,7 +158,7 @@ def generate_yaml_from_db(db_conn,file_fqn,yaml_data):
         if t.startswith(db_conn.schema+'.'):
            
             cols=get_table_column_types(db_conn,t)
-            tbl[str(db_conn.dbschema+"."+t)]=cols
+            tbl[str(db_conn.schema+"."+t)]=cols
     tables={"Tables":tbl}
    
     
@@ -239,8 +239,10 @@ def get_table_column_types(db, table_name, trg_schema=None):
             schema = trg_schema
         con  = db.connect_SqlAlchemy()
         schema_meta = sqlalchemy.MetaData(bind=con, 
-                    reflect=True, schema=schema)
-        table = sqlalchemy.Table(table_name, schema_meta, schema=schema, autoload=True, autoload_with=con)
+                      schema=schema)    
+        schema_meta.reflect()
+        logging.info("--------- {}".format(table_name))
+        table = sqlalchemy.Table(table_name.split('.')[-1], schema_meta, schema=schema, autoload=True, autoload_with=con)
         cols={}
         for col in table.columns:
             col_length=None
@@ -277,7 +279,7 @@ def fake_some_data_csv(file_path,table,num_rows):
         wr.writerow(header)
         wr.writerows(rows)
  
-def main(yamlfile=None):
+def main(yamlfile=None,p_output=None,p_generate=None):
     # process_list = []
     args = parse_cli_args()
     # multi process here for now
@@ -287,25 +289,27 @@ def main(yamlfile=None):
         yaml_file=os.path.abspath(yamlfile)
     else:
         yaml_file = os.path.abspath(args.yaml)
-    
-    
+    generate_yaml = p_generate or args.generate_yaml
+    output = p_output or args.output
     yaml_data = yaml.full_load(open(yaml_file))
     logging.info('Read YAML file: \n\t\t{}'.format(yaml_file))
     set_log_level(args.log_level)
     yaml_dict , db_conn= pre_process_yaml(yaml_file)
-    if args.generate_yaml is not None:
-        generate_yaml_from_db(db_conn,args.generate_yaml,yaml_data)
+    if generate_yaml is not None:
+        generate_yaml_from_db(db_conn,generate_yaml,yaml_data)
     else:
         tables=map_fake_functions('Tables',yaml_dict)
         for table in tables.keys():
             
             t=tables[table]
             if t is not None:
-                if args.output=='CSV':
+                if output=='CSV':
+                    print("OUTPUT TO CSV:")
                     fake_some_data_csv(table+'.csv',t,int(args.num_rows))
-                elif args.output=='PARQUET':
+                elif output=='PARQUET':
                     fake_some_data_parquet(table+'.parquet',t,int(args.num_rows))
-                elif args.output=='DB':
+                elif output=='DB':
+                    print("OUTPUT TO DATABASE:")
                     fake_some_data_db(table,t,int(args.num_rows),db_conn)
                 else:
                     print("unknow output so skipping table: {}".format(table))
