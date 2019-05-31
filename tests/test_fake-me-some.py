@@ -27,5 +27,13 @@ class Test_fake_me_some(unittest.TestCase,Config):
         os.makedirs(os.path.abspath(self.dirs['working_dir']),exist_ok=True)
         out_file=os.path.join(self.dirs['working_dir'],'new_fake_me_some.yaml')
         fake_me_some.main(self.yaml_file,'DB',out_file)
+
+    def test_04_suggest_some_from_db_to_yaml(self): #using environment variables
+        yaml,db=fake_me_some.pre_process_yaml(self.yaml_file)
+        
+        os.makedirs(os.path.abspath(self.dirs['working_dir']),exist_ok=True)
+        out_file=os.path.join(self.dirs['working_dir'],'new_fake_me_some_suggested.yaml')
+        fake_me_some.main(self.yaml_file,'SUGGEST',out_file)
+        
 if __name__ == '__main__':
     unittest.main()

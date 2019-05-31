@@ -147,8 +147,29 @@ def merge_dict_file(tables,file,yaml_data):
             file_yaml['db']=db
         with open(file, 'w') as outfile:
             yaml.dump(file_yaml, outfile, default_flow_style=False)
-        
 def generate_yaml_from_db(db_conn,file_fqn,yaml_data):
+
+    fqn=os.path.abspath(file_fqn)
+    table_list=db_conn.get_all_tables()
+    tbl={}
+     
+    for t in table_list:
+        if t.startswith(db_conn.schema+'.'):
+           
+            cols=get_table_column_types(db_conn,t)
+            tbl[str(db_conn.schema+"."+t)]=cols
+    tables={"Tables":tbl}
+   
+    
+    
+    if os.path.isfile(fqn):
+        print("File Already Exists Merging Updates")
+        merge_dict_file(tables,fqn,yaml_data)
+    else:
+        with open(fqn, 'w') as outfile:
+            yaml.dump(tables, outfile, default_flow_style=False)
+            
+def generate_yaml_from_db_suggest(db_conn,file_fqn,yaml_data):
 
     fqn=os.path.abspath(file_fqn)
     table_list=db_conn.get_all_tables()
@@ -229,7 +250,8 @@ def fake_some_data_db(table_name,table,num_rows,db_conn):
       
     pd.to_sql(table_name,engine,if_exists='append',index=False,schema=db_conn.schema)
     
-
+def match_name_to_type(column_name):
+    import levenshtien
 def get_table_column_types(db, table_name, trg_schema=None):
 
         import sqlalchemy, pprint
@@ -249,8 +271,9 @@ def get_table_column_types(db, table_name, trg_schema=None):
             try:
                 
                 col_length=col.type.length
+                print("----------zzz",col)
             except:
-                pass
+                print("----------xxx")
             str_type=str(col.type.python_type) 
             str_type=str_type.replace('>','')
             str_type=str_type.replace("<",'')
@@ -301,7 +324,10 @@ def main(yamlfile=None,p_output=None,p_generate=None,out_path=None):
     set_log_level(args.log_level)
     yaml_dict , db_conn= pre_process_yaml(yaml_file)
     if generate_yaml is not None:
-        generate_yaml_from_db(db_conn,generate_yaml,yaml_data)
+        if output == 'SUGGEST':
+            generate_yaml_from_db_suggest(db_conn,generate_yaml,yaml_data)
+        if output != 'SUGGEST':
+            generate_yaml_from_db(db_conn,generate_yaml,yaml_data)
     else:
         tables=map_fake_functions('Tables',yaml_dict)
         for table in tables.keys():

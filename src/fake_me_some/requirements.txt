@@ -7,3 +7,4 @@ pyyaml
 pymssql
 faker
 pymysql
+python-Levenshtein

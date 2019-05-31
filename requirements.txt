@@ -18,3 +18,4 @@ py_dbutils
 pyyaml
 pyarrow
 faker
+python-Levenshtein
