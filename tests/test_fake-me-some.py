@@ -12,6 +12,7 @@ __license__ = "mit"
 
 class Test_fake_me_some(unittest.TestCase,Config):
     def test_01_fake_from_yaml_to_CSV(self): #using environment variables
+        os.makedirs(os.path.abspath(self.dirs['working_dir']),exist_ok=True)
         yaml,db=fake_me_some.pre_process_yaml(self.yaml_file)
         db.execute("CREATE schema test")
         fake_me_some.main(self.yaml_file,out_path=self.dirs['working_dir'])

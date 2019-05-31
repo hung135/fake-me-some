@@ -307,6 +307,7 @@ def main(yamlfile=None,p_output=None,p_generate=None,out_path=None):
         for table in tables.keys():
             
             t=tables[table]
+            print("-------------",path)
             if t is not None:
                 if output=='CSV':
                     print("OUTPUT TO CSV:")
