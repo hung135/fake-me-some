@@ -305,7 +305,7 @@ def match_name_to_type(db,table_name, trg_schema=None,faker_list=[]):
         except:
                 print(" Number field found ",col.type,col)
                 match_name = col.type
-        cols[str(col).split('.')[-1]]=str(match_name )
+        cols[str(col).split('.')[-1]]=str(match_name).split('(')[0]
         #print(col,"----->closes match--->",match_name,closes_distance)
     return cols   
     
@@ -320,7 +320,7 @@ def get_table_column_types(db, table_name, trg_schema=None):
         schema_meta = sqlalchemy.MetaData(bind=con, 
                       schema=schema)    
         schema_meta.reflect()
-        logging.info("--------- {}".format(table_name))
+        logging.info(" Current Table: {}".format(table_name))
         table = sqlalchemy.Table(table_name.split('.')[-1], schema_meta, schema=schema, autoload=True, autoload_with=con)
         cols={}
         for col in table.columns:
@@ -328,17 +328,12 @@ def get_table_column_types(db, table_name, trg_schema=None):
             try:
                 
                 col_length=col.type.length
-                print("----------zzz",col)
+                
             except:
-                print("----------xxx",col.type)
+                
                 pass
-            str_type=str(col.type.python_type) 
-            str_type=str_type.replace('>','')
-            str_type=str_type.replace("<",'')
-            str_type=str_type.replace("type",'')
-            str_type=str_type.replace("'",'').strip()
-            str_len=(','+str(col_length)) if col_length is not None else ''
-            cols[str(col).split('.')[-1]]=str_type+str_len
+            str_type=str(col.type) 
+            cols[str(col).split('.')[-1]]=str_type
         return cols       
         
 def fake_some_data_csv(file_path,table,num_rows):
