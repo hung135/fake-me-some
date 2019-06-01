@@ -7,6 +7,7 @@ import pprint
 import logging as lg  
 from py_dbutils.rdbms import postgres 
 import pyarrow
+import random
   
 lg.basicConfig()
 logging = lg.getLogger()
@@ -90,19 +91,31 @@ def map_fake_functions(root,yaml_data):
         t=tables[tbl]
         if t is not None:
             for col in t.keys():
+                column_type=t[col]
                 
-                if len(t[col].split('.'))>1:
-                    xx=fake_data(t[col])
-                    t[col]=xx
+                if len(column_type.split('.'))>1:
+                    xx=fake_data(column_type)
+                    column_type=xx
  
                 else:
-                    if len(t[col].split(','))>1:
-                        str_len=int(t[col].split(',')[1])
+                    print("---------------",col,)
+                    print("-------xxx--------",col,column_type)
+                    if str(column_type).startswith('NUMERIC'):
+                        print("-------Numeric--------",col,column_type)
+                        def rnd_float(start=0,end_max=sys.maxsize):
+                            key_num = random.random()
+                            return key_num
+                        t[col]=rnd_float
+
+                    elif len(column_type.split(','))>1 and col.startswith('VARCHAR'):
+                        
+                        str_len=int(column_type.split(',')[1])
                         def rnd_str(int_len=str_len):
                             return random_string_generator(str_len,None)
                         t[col]=rnd_str
                         
                     else:
+                        print("-------Int--------",col,column_type)
                         def rnd_int(start=0,end_max=sys.maxsize):
                             key_num = random.SystemRandom()
                             return key_num.randint(0, 65045)
@@ -246,6 +259,7 @@ def fake_some_data_db(table_name,table,num_rows,db_conn):
     import pandas as pd
     #make row for each 
     rows=[]
+    logging.info("Faking Table: {} - {} Rows".format(table_name,num_rows))
     for _ in range(num_rows):
         row=[]
         for col in table.keys():
