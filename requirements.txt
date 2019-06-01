@@ -19,3 +19,4 @@ pyyaml
 pyarrow
 faker
 python-Levenshtein
+twine
