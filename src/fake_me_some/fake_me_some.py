@@ -27,7 +27,9 @@ def set_log_level(debug_level):
 # run through the yaml and replace embedded params
 def pre_process_yaml(yaml_file):
     # yaml_file = os.path.abspath(yaml_file)
-    yaml_data = yaml.full_load(open(yaml_file))
+    yaml_data = None
+    with open(yaml_file,"r") as f:
+        yaml_data = yaml.full_load((f))
     
     source_db = yaml_data['db']['connection']
     src_db=None
@@ -119,7 +121,7 @@ def merge_dict_file(tables,file,yaml_data):
     file_yaml=None
     db=yaml_data['db']
     with open(file, 'r') as outfile:
-        file_yaml=yaml.full_load(open(file))
+        file_yaml=yaml.full_load((outfile))
         if file_yaml.get(root,None):
             has_root=True
     if not has_root:
@@ -171,7 +173,7 @@ def generate_yaml_from_db(db_conn,file_fqn,yaml_data):
             
 def generate_yaml_from_db_suggest(db_conn,file_fqn,yaml_data):
     faker_list=[]
-    faker_file="/workspace/tests/faker_class.yml"
+    faker_file=os.path.join(os.path.dirname(os.path.abspath(__file__)),"provider.yml")
     with open(faker_file,"r") as f:
         faker_list=yaml.full_load(f)
         # for row in f:
@@ -375,7 +377,9 @@ def main(yamlfile=None,p_output=None,p_generate=None,out_path=None):
         yaml_file = os.path.abspath(args.yaml)
     generate_yaml = p_generate or args.generate_yaml
     output = p_output or args.output
-    yaml_data = yaml.full_load(open(yaml_file))
+    yaml_data = None
+    with open(yaml_file) as f:
+        yaml_data = yaml.full_load((f))
     logging.info('Read YAML file: \n\t\t{}'.format(yaml_file))
     set_log_level(args.log_level)
     yaml_dict , db_conn= pre_process_yaml(yaml_file)
