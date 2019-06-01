@@ -11,8 +11,10 @@ db:
         password_envir_var: PGPASSWORD #set environment variable PGPASSWORD
 Tables:
     test12:
-        full_name: person.name #faker provider name from faker_doc.txt
+        name: person.name #faker provider name from faker_doc.txt
         ssn: ssn.ssn #faker provider
+        first_name: ssn.ssn #faker provider
+        last_name: ssn.ssn
         phone_number: phone_number.phone_number
         loan_amount: bigint
     company:
@@ -21,6 +23,6 @@ Tables:
         company_size: int
     test_table3:
         color_name: color.color_name
-        color_hex: color.hex_color
+        hex_color: color.hex_color
             
             

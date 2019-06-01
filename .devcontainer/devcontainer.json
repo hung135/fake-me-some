@@ -6,6 +6,6 @@
     "workspaceFolder": "/workspace",
     "shutdownAction": "stopCompose",
     "extensions": [
-        "peterjausovec.vscode-docker"
+        "peterjausovec.vscode-docker","ms-python.python"
     ]
 }

@@ -22,6 +22,6 @@ Tables:
     dbo.test_table2:
     dbo.test_table3:
         color_name: color.color_name
-        color_hex: color.hex_color
+        hex_color: color.hex_color
             
             

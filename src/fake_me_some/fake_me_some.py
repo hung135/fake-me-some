@@ -157,7 +157,7 @@ def generate_yaml_from_db(db_conn,file_fqn,yaml_data):
         if t.startswith(db_conn.schema+'.'):
            
             cols=get_table_column_types(db_conn,t)
-            tbl[str(db_conn.schema+"."+t)]=cols
+            tbl[str(t).split(".")[-1]]=cols
     tables={"Tables":tbl}
    
     
@@ -170,16 +170,23 @@ def generate_yaml_from_db(db_conn,file_fqn,yaml_data):
             yaml.dump(tables, outfile, default_flow_style=False)
             
 def generate_yaml_from_db_suggest(db_conn,file_fqn,yaml_data):
-
+    faker_list=[]
+    faker_file="/workspace/tests/faker_class.yml"
+    with open(faker_file,"r") as f:
+        faker_list=yaml.full_load(f)
+        # for row in f:
+        #     faker_list.append(row)
+        # pass
+     
     fqn=os.path.abspath(file_fqn)
     table_list=db_conn.get_all_tables()
     tbl={}
-     
+    
     for t in table_list:
         if t.startswith(db_conn.schema+'.'):
-           
-            cols=get_table_column_types(db_conn,t)
-            tbl[str(db_conn.schema+"."+t)]=cols
+            
+            cols=match_name_to_type(db_conn,t,None, faker_list)
+            tbl[str(t).split(".")[-1]]=cols
     tables={"Tables":tbl}
    
     
@@ -190,6 +197,7 @@ def generate_yaml_from_db_suggest(db_conn,file_fqn,yaml_data):
     else:
         with open(fqn, 'w') as outfile:
             yaml.dump(tables, outfile, default_flow_style=False)
+        merge_dict_file(tables,fqn,yaml_data)
      
 
 def parse_cli_args():
@@ -250,8 +258,55 @@ def fake_some_data_db(table_name,table,num_rows,db_conn):
       
     pd.to_sql(table_name,engine,if_exists='append',index=False,schema=db_conn.schema)
     
-def match_name_to_type(column_name):
-    import levenshtien
+def match_name_to_type(db,table_name, trg_schema=None,faker_list=[]):
+    from Levenshtein import ratio 
+      
+    import sqlalchemy, pprint
+    if trg_schema is None:
+        schema = db.schema
+    else:
+        schema = trg_schema
+    con  = db.connect_SqlAlchemy()
+    schema_meta = sqlalchemy.MetaData(bind=con, 
+                    schema=schema)    
+    schema_meta.reflect()
+     
+    
+    table = sqlalchemy.Table(table_name.split('.')[-1], schema_meta, schema=schema, autoload=True, autoload_with=con)
+    cols={}
+    
+    for col in table.columns:
+        closes_distance=0.0
+        match_name=None
+        try: # if string , varchar text..etc
+                
+            col_length=col.type.length
+            
+            
+
+            for provider in faker_list:
+                #print(type(provider),provider)
+                for fake in faker_list[provider]:  
+                    #print(type(faker_list[]),"------------")
+                    r=ratio(fake,str(col).split('.')[-1]) 
+                    
+                    r1=ratio(provider.split(".")[-1]+"_"+fake,str(col).split('.')[-1]) 
+                    if r1>r:
+                        r=r1
+                    if r>closes_distance:
+                        closes_distance=r
+                        match_name=provider.split(".")[-1]+"."+fake
+                
+                #print(str(col), "-->",(lib),r)
+                if closes_distance==1:
+                    break 
+        except:
+                print(" Number field found ",col.type,col)
+                match_name = col.type
+        cols[str(col).split('.')[-1]]=str(match_name )
+        #print(col,"----->closes match--->",match_name,closes_distance)
+    return cols   
+    
 def get_table_column_types(db, table_name, trg_schema=None):
 
         import sqlalchemy, pprint
@@ -273,7 +328,8 @@ def get_table_column_types(db, table_name, trg_schema=None):
                 col_length=col.type.length
                 print("----------zzz",col)
             except:
-                print("----------xxx")
+                print("----------xxx",col.type)
+                pass
             str_type=str(col.type.python_type) 
             str_type=str_type.replace('>','')
             str_type=str_type.replace("<",'')
@@ -333,7 +389,7 @@ def main(yamlfile=None,p_output=None,p_generate=None,out_path=None):
         for table in tables.keys():
             
             t=tables[table]
-            print("-------------",path)
+             
             if t is not None:
                 if output=='CSV':
                     print("OUTPUT TO CSV:")
