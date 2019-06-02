@@ -10,6 +10,7 @@ from py_dbutils.rdbms import postgres
 import pyarrow
 import random
 from faker import Faker
+import re
 
 lg.basicConfig()
 logging = lg.getLogger()
@@ -61,7 +62,7 @@ def random_string_generator(str_size, allowed_chars=None):
 
 # function to derive a function to generate data and return that function to be called later
 def fake_data(data_type):
-    
+
     dynamic_module_path = "faker.{}"
     module = None
     func_name = None
@@ -106,20 +107,25 @@ def map_fake_functions(root, yaml_data):
                     t[col] = xx
                     # column_type=xx
 
-                elif str(column_type).upper().startswith('NUMERIC'):
+                elif str(column_type).upper().startswith('NUMERIC') or str(column_type).upper().startswith('DOUBLE'):
 
                     def rnd_float(start=0, end_max=sys.maxsize):
                         key_num = random.random()
                         return key_num
                     t[col] = rnd_float
-
+                elif str(column_type).upper().startswith('TIMESTAMP') or str(column_type).upper().startswith('DATETIME'):
+                    import datetime
+                    def rnd_time():
+                        return datetime.datetime.now()
+                    t[col] = rnd_time
                 elif str(column_type).upper().startswith('VARCHAR') or str(column_type).upper().startswith('TEXT'):
-                    print("varrrrcharrrrr")
-                    import re
-                    #get the len between parentasis
-                    str_len =0
+
+                    # get the len between parentasis
+                    str_len = 0
                     try:
-                        str_len = int(re.search(r'\((.*?)\)',str(column_type).upper()).group(1))
+                        str_len = int(
+                            re.search(r'\((.*?)\)', str(column_type).upper()).group(1))
+
                         def rnd_str(int_len=str_len):
                             return random_string_generator(str_len, None)
                         t[col] = rnd_str
@@ -128,15 +134,22 @@ def map_fake_functions(root, yaml_data):
                         fake = Faker()
                         fake.add_provider('providers.lorem.sentence')
                         sentence = getattr(fake, 'sentence')
+
                         def rnd_lorem():
                             return sentence()
-                        t[col] = rnd_lorem 
+                        t[col] = rnd_lorem
 
-                elif str(column_type).upper() == ('INT') or str(column_type).upper() == ('BIGINT'):
+                elif str(column_type).upper() in ['BIGINT', 'INT', 'INTEGER']:
 
                     def rnd_int(start=0, end_max=sys.maxsize):
                         key_num = random.SystemRandom()
                         return key_num.randint(0, 65045)
+                    t[col] = rnd_int
+                elif str(column_type).upper() in ['SMALLINT']:
+
+                    def rnd_int(start=0, end_max=sys.maxsize):
+                        key_num = random.SystemRandom()
+                        return key_num.randint(0, 255)
                     t[col] = rnd_int
                 else:
                     raise Exception(
@@ -339,7 +352,7 @@ def match_name_to_type(db, table_name, trg_schema=None, faker_list=[]):
                 if closes_distance == 1:
                     break
         except Exception as e:
-            if not str(col.type).upper() in ['BIGINT', 'INT']:
+            if not str(col.type).upper() in ['BIGINT', 'INT', 'SMALLINT', 'INTEGER']:
                 print(" Number field found ", col.type, col)
                 print("\t\t", e)
             match_name = col.type
