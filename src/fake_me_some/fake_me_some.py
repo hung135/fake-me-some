@@ -9,6 +9,7 @@ import logging as lg
 from py_dbutils.rdbms import postgres
 import pyarrow
 import random
+from faker import Faker
 
 lg.basicConfig()
 logging = lg.getLogger()
@@ -60,7 +61,7 @@ def random_string_generator(str_size, allowed_chars=None):
 
 # function to derive a function to generate data and return that function to be called later
 def fake_data(data_type):
-    from faker import Faker
+    
     dynamic_module_path = "faker.{}"
     module = None
     func_name = None
@@ -112,13 +113,24 @@ def map_fake_functions(root, yaml_data):
                         return key_num
                     t[col] = rnd_float
 
-                elif col.upper().startswith('VARCHAR'):
-
-                    str_len = int(column_type.split(',')[1])
-
-                    def rnd_str(int_len=str_len):
-                        return random_string_generator(str_len, None)
-                    t[col] = rnd_str
+                elif str(column_type).upper().startswith('VARCHAR') or str(column_type).upper().startswith('TEXT'):
+                    print("varrrrcharrrrr")
+                    import re
+                    #get the len between parentasis
+                    str_len =0
+                    try:
+                        str_len = int(re.search(r'\((.*?)\)',str(column_type).upper()).group(1))
+                        def rnd_str(int_len=str_len):
+                            return random_string_generator(str_len, None)
+                        t[col] = rnd_str
+                    except:
+                        logging.info("Not lenth specified assumes text")
+                        fake = Faker()
+                        fake.add_provider('providers.lorem.sentence')
+                        sentence = getattr(fake, 'sentence')
+                        def rnd_lorem():
+                            return sentence()
+                        t[col] = rnd_lorem 
 
                 elif str(column_type).upper() == ('INT') or str(column_type).upper() == ('BIGINT'):
 
