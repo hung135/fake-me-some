@@ -151,11 +151,10 @@ def map_fake_functions(root, yaml_data):
                         key_num = random.SystemRandom()
                         return key_num.randint(0, 255)
                     t[col] = rnd_int
-                elif str(column_type).upper().startswith('BIT'):
+                elif str(column_type).upper().startswith('BIT') or str(column_type).upper().startswith('BOOL') :
 
                     def rnd_int(start=0, end_max=sys.maxsize):
-                        key_num = random.SystemRandom()
-                        return key_num.randint(0, 1)
+                        return bool(random.getrandbits(1))
                     t[col] = rnd_int
                 else:
                     raise Exception(
