@@ -93,38 +93,35 @@ def map_fake_functions(root,yaml_data):
             for col in t.keys():
                 column_type=t[col]
                 
-                if len(column_type.split('.'))>1:
+        
+                print("---------------",col,)
+                print("-------xxx--------",col,column_type)
+                if str(column_type).startswith('provider.'):
                     xx=fake_data(column_type)
                     column_type=xx
- 
-                else:
-                    print("---------------",col,)
-                    print("-------xxx--------",col,column_type)
-                    if str(column_type).startswith('NUMERIC'):
-                        print("-------Numeric--------",col,column_type)
-                        def rnd_float(start=0,end_max=sys.maxsize):
-                            key_num = random.random()
-                            return key_num
-                        t[col]=rnd_float
+                elif str(column_type).startswith('NUMERIC'):
+                    print("-------Numeric--------",col,column_type)
+                    def rnd_float(start=0,end_max=sys.maxsize):
+                        key_num = random.random()
+                        return key_num
+                    t[col]=rnd_float
 
-                    elif len(column_type.split(','))>1 and col.startswith('VARCHAR'):
-                        
-                        str_len=int(column_type.split(',')[1])
-                        def rnd_str(int_len=str_len):
-                            return random_string_generator(str_len,None)
-                        t[col]=rnd_str
-                        
-                    else:
-                        print("-------Int--------",col,column_type)
-                        def rnd_int(start=0,end_max=sys.maxsize):
-                            key_num = random.SystemRandom()
-                            return key_num.randint(0, 65045)
-                             
-                        t[col]=rnd_int
-        else:
-            #pull skip table
-            pass
- 
+                elif len(column_type.split(','))>1 and col.startswith('VARCHAR'):
+                    
+                    str_len=int(column_type.split(',')[1])
+                    def rnd_str(int_len=str_len):
+                        return random_string_generator(str_len,None)
+                    t[col]=rnd_str
+                    
+                else:
+                    print("-------Int--------",col,column_type)
+                    def rnd_int(start=0,end_max=sys.maxsize):
+                        key_num = random.SystemRandom()
+                        return key_num.randint(0, 65045)
+                            
+                    t[col]=rnd_int
+
+        print(tables)
     return tables
 #leave what's already in the yaml file there and add in what's new
 def merge_dict_file(tables,file,yaml_data):
@@ -295,7 +292,7 @@ def match_name_to_type(db,table_name, trg_schema=None,faker_list=[]):
         closes_distance=0.0
         match_name=None
         try: # if string , varchar text..etc
-                
+            print("xxxxxxxxxxxxxxxxxxxxxxxxxxxx",col,col.type)
             col_length=col.type.length
             
             
@@ -316,10 +313,11 @@ def match_name_to_type(db,table_name, trg_schema=None,faker_list=[]):
                 #print(str(col), "-->",(lib),r)
                 if closes_distance==1:
                     break 
-        except:
+        except Exception as e:
                 print(" Number field found ",col.type,col)
+                print("\t\t",e)
                 match_name = col.type
-        cols[str(col).split('.')[-1]]=str(match_name).split('(')[0]
+        cols[str(col)]=str(match_name).split('(')[0]
         #print(col,"----->closes match--->",match_name,closes_distance)
     return cols   
     
@@ -357,6 +355,7 @@ def fake_some_data_csv(file_path,table,num_rows):
     for _ in range(num_rows):
         row=[]
         for col in table.keys():
+            print(col,"-------------------------------------....",table[col])
             data=table[col]()
             row.append(data)
         rows.append(row)
@@ -398,9 +397,10 @@ def main(yamlfile=None,p_output=None,p_generate=None,out_path=None):
         if output != 'SUGGEST':
             generate_yaml_from_db(db_conn,generate_yaml,yaml_data)
     else:
+        #map each column to a faker function
         tables=map_fake_functions('Tables',yaml_dict)
         for table in tables.keys():
-            
+            print("xxxxxxxxxxxxxxx",table)
             t=tables[table]
              
             if t is not None:
