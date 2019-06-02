@@ -118,16 +118,19 @@ def map_fake_functions(root, yaml_data):
                     def rnd_time():
                         return datetime.datetime.now()
                     t[col] = rnd_time
-                elif str(column_type).upper().startswith('VARCHAR') or str(column_type).upper().startswith('TEXT'):
+                elif str(column_type).upper().startswith('VARCHAR') or str(column_type).upper().startswith('CHAR') or str(column_type).upper().startswith('TEXT'):
 
                     # get the len between parentasis
                     str_len = 0
+                    
                     try:
                         str_len = int(
                             re.search(r'\((.*?)\)', str(column_type).upper()).group(1))
 
                         def rnd_str(int_len=str_len):
-                            return random_string_generator(str_len, None)
+                            
+                            return random_string_generator(int_len, None)
+                            
                         t[col] = rnd_str
                     except:
                         logging.info("Not lenth specified assumes text")
@@ -153,9 +156,9 @@ def map_fake_functions(root, yaml_data):
                     t[col] = rnd_int
                 elif str(column_type).upper().startswith('BIT') or str(column_type).upper().startswith('BOOL') :
 
-                    def rnd_int(start=0, end_max=sys.maxsize):
-                        return bool(random.getrandbits(1))
-                    t[col] = rnd_int
+                    def rnd_bit(start=0, end_max=sys.maxsize):
+                        return str(random.getrandbits(1))
+                    t[col] = rnd_bit
                 else:
                     raise Exception(
                         "Uknown type {}-{}".format(col, str(column_type)))
@@ -172,8 +175,12 @@ def merge_dict_file(tables, file, yaml_data):
     db = yaml_data['db']
     with open(file, 'r') as outfile:
         file_yaml = yaml.full_load((outfile))
-        if file_yaml.get(root, None):
-            has_root = True
+        try:
+            if file_yaml.get(root, None):
+                has_root = True
+        except:
+            has_root=False
+
     if not has_root:
         with open(file, 'a') as outfile:
             yaml.dump(tables, outfile, default_flow_style=False)
@@ -214,12 +221,10 @@ def generate_yaml_from_db(db_conn, file_fqn, yaml_data):
             tbl[str(t).split(".")[-1]] = cols
     tables = {"Tables": tbl}
 
-    if os.path.isfile(fqn):
-        print("File Already Exists Merging Updates")
-        merge_dict_file(tables, fqn, yaml_data)
-    else:
+    if not os.path.isfile(fqn):
         with open(fqn, 'w') as outfile:
             yaml.dump(tables, outfile, default_flow_style=False)
+    merge_dict_file(tables, fqn, yaml_data)
 
 
 def generate_yaml_from_db_suggest(db_conn, file_fqn, yaml_data):
