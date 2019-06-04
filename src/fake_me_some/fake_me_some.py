@@ -277,16 +277,27 @@ def generate_yaml_from_db_suggest(db_conn, file_fqn, yaml_data):
 
 
 def parse_cli_args():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--yaml', default='config.yaml',
+    parser = argparse.ArgumentParser(prog='fake_me_some', usage="""%(prog)s [options]
+    MAKE A config.yaml like this if you don't have one:
+    db:
+    connection: 
+        db: postgres
+        host: pgdb
+        port: 5432
+        type: 'POSTGRES'
+        schema: "test"
+        userid: 'docker'
+        password_envir_var: PGPASSWORD """)
+
+    parser.add_argument('--y', default='config.yaml',
                         help='path to yaml file')
-    parser.add_argument('--generate_yaml', default=None,
-                        help='file name of yaml to create queries database for tables and columns')
-    parser.add_argument('--num_rows', default=10,
-                        help='Prints out cardinality of analyzeed columns')
-    parser.add_argument('--output', default='CSV',
+    parser.add_argument('--of', default=None,
+                        help='new yaml file to dump to')
+    parser.add_argument('--rows', default=10,
+                        help='Number of Rows to Fake')
+    parser.add_argument('--o', default='CSV',
                         help='output data to CSV, DB, PARQUET')
-    parser.add_argument('--log_level', default='INFO',
+    parser.add_argument('--ll', default='INFO',
                         help='Default Log Level')
     args = parser.parse_args()
     return args
@@ -455,14 +466,14 @@ def main(yamlfile=None, p_output=None, p_generate=None, out_path=None):
     if not yamlfile is None:
         yaml_file = os.path.abspath(yamlfile)
     else:
-        yaml_file = os.path.abspath(args.yaml)
-    generate_yaml = p_generate or args.generate_yaml
-    output = p_output or args.output
+        yaml_file = os.path.abspath(args.y)
+    generate_yaml = p_generate or args.of
+    output = p_output or args.o
     yaml_data = None
     with open(yaml_file) as f:
         yaml_data = yaml.full_load((f))
     logging.info('Read YAML file: \n\t\t{}'.format(yaml_file))
-    set_log_level(args.log_level)
+    set_log_level(args.ll)
     yaml_dict, db_conn = pre_process_yaml(yaml_file)
     if generate_yaml is not None:
         if output == 'SUGGEST':
@@ -480,13 +491,13 @@ def main(yamlfile=None, p_output=None, p_generate=None, out_path=None):
                 if output == 'CSV':
                     print("OUTPUT TO CSV:")
                     fake_some_data_csv(os.path.join(
-                        path, table+'.csv'), t, int(args.num_rows))
+                        path, table+'.csv'), t, int(args.rows))
                 elif output == 'PARQUET':
                     fake_some_data_parquet(os.path.join(
-                        path, table+'.parquet'), t, int(args.num_rows))
+                        path, table+'.parquet'), t, int(args.rows))
                 elif output == 'DB':
                     print("OUTPUT TO DATABASE:")
-                    fake_some_data_db(table, t, int(args.num_rows), db_conn)
+                    fake_some_data_db(table, t, int(args.rows), db_conn)
                 else:
                     print("unknow output so skipping table: {}".format(table))
 
