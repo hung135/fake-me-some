@@ -124,11 +124,15 @@ def map_fake_functions(root, yaml_data):
                     xx = fake_data(column_type)
                     t[col] = xx
                     # column_type=xx
-
-                elif str(column_type).upper().startswith('NUMERIC') or str(column_type).upper().startswith('DOUBLE'):
+                 
+                elif (str(column_type).upper().startswith('NUMERIC') 
+                        or str(column_type).upper().startswith('DOUBLE')
+                        or str(column_type).upper().startswith('MONEY')
+                        
+                        ):
 
                     def rnd_float(start=0, end_max=sys.maxsize):
-                        key_num = random.random()
+                        key_num = round(random.random(),2)
                         return key_num
                     t[col] = rnd_float
                 elif str(column_type).upper().startswith('TIMESTAMP') or str(column_type).upper().startswith('DATETIME'):
@@ -274,7 +278,6 @@ def generate_yaml_from_db_suggest(db_conn, file_fqn, yaml_data):
         with open(fqn, 'w') as outfile:
             yaml.dump(tables, outfile, default_flow_style=False)
         merge_dict_file(tables, fqn, yaml_data)
-
 
 def parse_cli_args():
     parser = argparse.ArgumentParser(prog='fake_me_some', usage="""%(prog)s [options]
