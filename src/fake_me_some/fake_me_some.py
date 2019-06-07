@@ -445,7 +445,7 @@ def fake_some_data_csv(file_path, table, num_rows):
             data = table[col]()
             row.append(data)
         rows.append(row)
-    header = [col.encode() for col in table.keys()]
+    header = [col for col in table.keys()]
     import csv
 
     with open(file_path, 'w') as f:
