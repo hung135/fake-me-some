@@ -53,6 +53,7 @@ def pre_process_yaml(yaml_file):
 
     return yaml_data, src_db
 
+
 fake = Faker()
 fake.add_provider('providers.lorem.sentence')
 fake.add_provider('providers.lorem.words')
@@ -62,20 +63,18 @@ words = getattr(fake, 'words')
 word = getattr(fake, 'word')
 random_num = random.SystemRandom()
 
-def random_char_generator(str_size=1):
-    
-    return  string_word
+ 
+
 
 def random_string_generator(str_size, num_words=1):
 
     #allowed_chars = chars = string.ascii_letters + string.punctuation
-    
 
     string_word = words(1)
-    string_word= ' '.join(string_word)
-    if len(string_word)>str_size:
-        string_word=string_word[:str_size]
-    return  string_word
+    string_word = ' '.join(string_word)
+    if len(string_word) > str_size:
+        string_word = string_word[:str_size]
+    return string_word
 
 
 # function to derive a function to generate data and return that function to be called later
@@ -118,25 +117,24 @@ def map_fake_functions(root, yaml_data):
             for col in t.keys():
                 column_type = t[col]
 
-                # print("--------------zzzz-",col,t,tbl)
-                # print("-------xxx-----yyy---",col,column_type)
                 if str(column_type).startswith('providers.'):
                     xx = fake_data(column_type)
                     t[col] = xx
                     # column_type=xx
-                 
-                elif (str(column_type).upper().startswith('NUMERIC') 
+
+                elif (str(column_type).upper().startswith('NUMERIC')
                         or str(column_type).upper().startswith('DOUBLE')
                         or str(column_type).upper().startswith('MONEY')
-                        
-                        ):
+
+                      ):
 
                     def rnd_float(start=0, end_max=sys.maxsize):
-                        key_num = round(random.random(),2)
+                        key_num = round(random.random(), 2)
                         return key_num
                     t[col] = rnd_float
                 elif str(column_type).upper().startswith('TIMESTAMP') or str(column_type).upper().startswith('DATETIME'):
                     import datetime
+
                     def rnd_time():
                         return datetime.datetime.now()
                     t[col] = rnd_time
@@ -144,15 +142,15 @@ def map_fake_functions(root, yaml_data):
 
                     # get the len between parentasis
                     str_len = 0
-                    
+
                     try:
                         str_len = int(
                             re.search(r'\((.*?)\)', str(column_type).upper()).group(1))
 
                         def rnd_str(int_len=str_len):
-                            
+
                             return random_string_generator(int_len, int(int_len/6)+1)
-                            
+
                         t[col] = rnd_str
                     except:
                         logging.info("Not lenth specified assumes text")
@@ -167,16 +165,16 @@ def map_fake_functions(root, yaml_data):
                 elif str(column_type).upper() in ['BIGINT', 'INT', 'INTEGER']:
 
                     def rnd_int(start=0, end_max=sys.maxsize):
-                        
+
                         return random_num.randint(0, 65045)
                     t[col] = rnd_int
                 elif str(column_type).upper() in ['SMALLINT']:
 
                     def rnd_int(start=0, end_max=sys.maxsize):
-                        
+
                         return random_num.randint(0, 255)
                     t[col] = rnd_int
-                elif str(column_type).upper().startswith('BIT') or str(column_type).upper().startswith('BOOL') :
+                elif str(column_type).upper().startswith('BIT') or str(column_type).upper().startswith('BOOL'):
 
                     def rnd_bit(start=0, end_max=sys.maxsize):
                         return str(random.getrandbits(1))
@@ -201,7 +199,7 @@ def merge_dict_file(tables, file, yaml_data):
             if file_yaml.get(root, None):
                 has_root = True
         except:
-            has_root=False
+            has_root = False
 
     if not has_root:
         with open(file, 'a') as outfile:
@@ -278,6 +276,7 @@ def generate_yaml_from_db_suggest(db_conn, file_fqn, yaml_data):
         with open(fqn, 'w') as outfile:
             yaml.dump(tables, outfile, default_flow_style=False)
         merge_dict_file(tables, fqn, yaml_data)
+
 
 def parse_cli_args():
     parser = argparse.ArgumentParser(prog='fake_me_some', usage="""%(prog)s [options]
@@ -419,6 +418,8 @@ def get_table_column_types(db, table_name, trg_schema=None):
     logging.info(" Current Table: {}".format(table_name))
     table = sqlalchemy.Table(table_name.split(
         '.')[-1], schema_meta, schema=schema, autoload=True, autoload_with=con)
+    isinstance(table,sqlalchemy.sql.schema.Table)
+
     cols = {}
     for col in table.columns:
         col_length = None

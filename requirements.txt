@@ -20,3 +20,4 @@ pyarrow
 faker
 python-Levenshtein
 twine
+autopep8
