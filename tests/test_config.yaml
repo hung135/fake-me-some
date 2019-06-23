@@ -1,6 +1,7 @@
  # fill all these out
 db:
     connection:
+        password_envir_var: PGPASSWORD #set environment variable PGPASSWORD
         appname: data_faker #used to tag dbconnection for visibility in db
         db: postgres
         host: pgdb
@@ -8,21 +9,24 @@ db:
         type: 'POSTGRES'
         schema: "test"
         userid: 'docker'
-        password_envir_var: PGPASSWORD #set environment variable PGPASSWORD
+        
 Tables:
     test12:
+        loan_amount: bigint
         name: providers.person.name #faker provider name from faker_doc.txt
         ssn: providers.ssn.ssn #faker provider
         first_name: providers.ssn.ssn #faker provider
         last_name: providers.ssn.ssn
         phone_number: providers.phone_number.phone_number
-        loan_amount: bigint
+        
     company:
+        company_size: int
         company_name: providers.company.name
         company_address: providers.address.address
-        company_size: int
+        
     test_table3:
-        color_name: providers.color.color_name
         hex_color: providers.color.hex_color
+        color_name: providers.color.color_name
+        
             
             

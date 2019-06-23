@@ -9,7 +9,17 @@ __author__ = "Hung Nguyen"
 __copyright__ = "Hung Nguyen"
 __license__ = "mit"
 
-
+def clean_working_dir(folder: str):
+    import os, shutil
+     
+    for the_file in os.listdir(folder):
+        file_path = os.path.join(folder, the_file)
+        try:
+            if os.path.isfile(file_path):
+                os.unlink(file_path)
+            #elif os.path.isdir(file_path): shutil.rmtree(file_path)
+        except Exception as e:
+            print(e)
 class Test_fake_me_some(unittest.TestCase,Config):
     def test_01_fake_from_yaml_to_CSV(self): #using environment variables
         os.makedirs(os.path.abspath(self.dirs['working_dir']),exist_ok=True)
@@ -22,6 +32,7 @@ class Test_fake_me_some(unittest.TestCase,Config):
         fake_me_some.main(self.yaml_file,'DB',out_path=self.dirs['working_dir'])
 
     def test_03_fake_from_yaml_from_db_to_yaml(self): #using environment variables
+        clean_working_dir(self.dirs['working_dir'])
         yaml,db=fake_me_some.pre_process_yaml(self.yaml_file)
         db.execute("CREATE schema test")
         os.makedirs(os.path.abspath(self.dirs['working_dir']),exist_ok=True)
