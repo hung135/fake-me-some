@@ -11,8 +11,7 @@ import pyarrow
 import random
 from faker import Faker
 import re
-from collections import OrderedDict 
-
+from collections import OrderedDict
 
 lg.basicConfig()
 logging = lg.getLogger()
@@ -25,6 +24,7 @@ WORKINGPATH = os.environ.get('WORKINGPATH', None)
 def ordered_load(stream, Loader=yaml.Loader, object_pairs_hook=OrderedDict):
     class OrderedLoader(Loader):
         pass
+
     def construct_mapping(loader, node):
         loader.flatten_mapping(node)
         return object_pairs_hook(loader.construct_pairs(node))
@@ -34,7 +34,6 @@ def ordered_load(stream, Loader=yaml.Loader, object_pairs_hook=OrderedDict):
     return yaml.load(stream, OrderedLoader)
 
 
- 
 def set_log_level(debug_level):
     if debug_level == 'DEBUG':
         logging.setLevel(lg.DEBUG)
@@ -68,6 +67,7 @@ def pre_process_yaml(yaml_file):
 
     return yaml_data, src_db
 
+
 fake = Faker()
 fake.add_provider('providers.lorem.sentence')
 fake.add_provider('providers.lorem.words')
@@ -77,72 +77,46 @@ words = getattr(fake, 'words')
 word = getattr(fake, 'word')
 random_num = random.SystemRandom()
 
+
 def random_char_generator(str_size=1):
-    
-    return  string_word
+    string_word = 'need to implement random char generator'
+    return string_word
+
 
 def random_string_generator(str_size, num_words=1):
 
     #allowed_chars = chars = string.ascii_letters + string.punctuation
-    
 
     string_word = words(1)
-    string_word= ' '.join(string_word)
-    if len(string_word)>str_size:
-        string_word=string_word[:str_size]
-    return  string_word
-
-def dump_yaml_to_file(tables,outfile):
+    string_word = ' '.join(string_word)
+    if len(string_word) > str_size:
+        string_word = string_word[:str_size]
+    return string_word
 
 
-    def _ordered_dump(data, stream=None, Dumper=yaml.Dumper, **kwds):
-        """
-        Ordered yaml dumper
-        Use this instead ot yaml.Dumper/yaml.SaveDumper to get an Ordereddict
+def dump_yaml_to_file(tables, outfile):
 
-        :param stream: stream to write to
-        :param Dumper: yaml-dumper to use
-        :**kwds: Additional keywords
-        
-        :return: OrderedDict structure
-        """
-
-    def dump_ordered_yaml(ordered_data, output_filename, Dumper=yaml.Dumper):
-        class OrderedDumper(Dumper):
-            pass
-
-        class UnsortableList(list):
-            def sort(self, *args, **kwargs):
-                pass
-
-        class UnsortableOrderedDict(OrderedDict):
-            def items(self, *args, **kwargs):
-                return UnsortableList(OrderedDict.items(self, *args, **kwargs))
-
-        OrderedDumper.add_representer(UnsortableOrderedDict, yaml.representer.SafeRepresenter.represent_dict)
-        #with open(output_filename, "w") as f:
-        yaml.dump(ordered_data, output_filename, Dumper=OrderedDumper) 
-        
     def custom_dump_yaml(ordered_data, output_filename):
         #DB or Tables
 
         for i in ordered_data:
-            print(i)
+
             output_filename.write(f"{i}:\n")
-            #Tables names
+            # Tables names
             for j in ordered_data[i]:
-                print("  ",j)
+
                 output_filename.write(f"  {j}:\n")
                 for k in ordered_data[i][j]:
-                    print("    ",k,ordered_data[i][j][k])
-                    output_filename.write(f"    {k}: {ordered_data[i][j][k]}\n")
-    pprint.pprint(tables)
-    #yaml.dump(tables, outfile )
-    
-    #dump_ordered_yaml(tables,outfile)
-    custom_dump_yaml(tables,outfile)
+
+                    output_filename.write(
+                        f"    {k}: {ordered_data[i][j][k]}\n")
+
+    # dump_ordered_yaml(tables,outfile)
+    custom_dump_yaml(tables, outfile)
 
 # function to derive a function to generate data and return that function to be called later
+
+
 def fake_data(data_type):
 
     dynamic_module_path = "faker.{}"
@@ -173,7 +147,7 @@ def fake_data(data_type):
 
 def map_fake_functions(root, yaml_data):
     import copy
-    print(yaml_data)
+
     tables = copy.deepcopy(yaml_data[root])
 
     for tbl in tables.keys():
@@ -189,18 +163,18 @@ def map_fake_functions(root, yaml_data):
                     xx = fake_data(column_type)
                     t[col] = xx
                     # column_type=xx
-                 
-                elif (str(column_type).upper().startswith('NUMERIC') 
+
+                elif (str(column_type).upper().startswith('NUMERIC')
                         or str(column_type).upper().startswith('DOUBLE')
                         or str(column_type).upper().startswith('MONEY')
-                        
-                        ):
+
+                      ):
 
                     def rnd_float(start=0, end_max=sys.maxsize):
-                        key_num = round(random.random(),2)
+                        key_num = round(random.random(), 2)
                         return key_num
                     t[col] = rnd_float
-                elif str(column_type).upper()==('DATE'):
+                elif str(column_type).upper() == ('DATE'):
                     import datetime
                     def rnd_time():
 
@@ -208,6 +182,7 @@ def map_fake_functions(root, yaml_data):
                     t[col] = rnd_time
                 elif str(column_type).upper().startswith('TIMESTAMP') or str(column_type).upper().startswith('DATETIME'):
                     import datetime
+
                     def rnd_time():
                         return datetime.datetime.now()
                     t[col] = rnd_time
@@ -215,15 +190,15 @@ def map_fake_functions(root, yaml_data):
 
                     # get the len between parentasis
                     str_len = 0
-                    
+
                     try:
                         str_len = int(
                             re.search(r'\((.*?)\)', str(column_type).upper()).group(1))
 
                         def rnd_str(int_len=str_len):
-                            
+
                             return random_string_generator(int_len, int(int_len/6)+1)
-                            
+
                         t[col] = rnd_str
                     except:
                         logging.info("Not lenth specified assumes text")
@@ -238,16 +213,16 @@ def map_fake_functions(root, yaml_data):
                 elif str(column_type).upper() in ['BIGINT', 'INT', 'INTEGER']:
 
                     def rnd_int(start=0, end_max=sys.maxsize):
-                        
+
                         return random_num.randint(0, 65045)
                     t[col] = rnd_int
                 elif str(column_type).upper() in ['SMALLINT']:
 
                     def rnd_int(start=0, end_max=sys.maxsize):
-                        
+
                         return random_num.randint(0, 255)
                     t[col] = rnd_int
-                elif str(column_type).upper().startswith('BIT') or str(column_type).upper().startswith('BOOL') :
+                elif str(column_type).upper().startswith('BIT') or str(column_type).upper().startswith('BOOL'):
 
                     def rnd_bit(start=0, end_max=sys.maxsize):
                         return str(random.getrandbits(1))
@@ -261,28 +236,27 @@ def map_fake_functions(root, yaml_data):
 
 
 def merge_dict_file(tables, file, yaml_data):
-    print("here 55555")
-     
+
     root = 'Tables'
     has_root = False
     file_yaml = None
     db = yaml_data['db']
     with open(file, 'r') as stream:
-        file_yaml=ordered_load(stream, yaml.SafeLoader)
+        file_yaml = ordered_load(stream, yaml.SafeLoader)
         #file_yaml = yaml.safe_load((outfile))
-        
+
         # usage example:
         ordered_load(stream, yaml.SafeLoader)
         try:
             if file_yaml.get(root, None):
                 has_root = True
         except:
-            has_root=False
+            has_root = False
 
     if not has_root:
         with open(file, 'a') as outfile:
-            [dump_yaml_to_file(tables, outfile )]
-            
+            [dump_yaml_to_file(tables, outfile)]
+
     else:
         # loop through every tables found in DB
         for tbl in tables[root].keys():
@@ -304,7 +278,7 @@ def merge_dict_file(tables, file, yaml_data):
         if file_yaml.get('db', None) is None:
             file_yaml['db'] = db
         with open(file, 'w') as outfile:
-            pprint.pprint(file_yaml)
+
             dump_yaml_to_file(file_yaml, outfile)
 
 
@@ -313,26 +287,29 @@ def generate_yaml_from_db(db_conn, file_fqn, yaml_data):
     fqn = os.path.abspath(file_fqn)
     table_list = db_conn.get_all_tables()
     tbl = {}
-    
-    i=0
+
+    i = 0
     for t in table_list:
-        
+
         if t.startswith(db_conn.schema+'.'):
-            i+=1
+            i += 1
             cols = get_table_column_types(db_conn, t)
-            #order_dict=OrderedDict 
-            pprint.pprint(cols)
+            # order_dict=OrderedDict
+
             tbl[str(t).split(".")[-1]] = cols
-    if i==0:
+    if i == 0:
         raise Exception(f"Not tables found in schema: {db_conn.schema}")
     tables = {"Tables": tbl}
-    pprint.pprint(tbl)
+
     if not os.path.isfile(fqn):
         with open(fqn, 'w') as outfile:
-            pprint.pprint(tables)
+
             dump_yaml_to_file(tables, outfile)
     merge_dict_file(tables, fqn, yaml_data)
+
+
 []
+
 
 def generate_yaml_from_db_suggest(db_conn, file_fqn, yaml_data):
     faker_list = []
@@ -363,6 +340,7 @@ def generate_yaml_from_db_suggest(db_conn, file_fqn, yaml_data):
         with open(fqn, 'w') as outfile:
             dump_yaml_to_file(tables, outfile)
         merge_dict_file(tables, fqn, yaml_data)
+
 
 def parse_cli_args():
     parser = argparse.ArgumentParser(prog='fake_me_some', usage="""%(prog)s [options]
@@ -442,7 +420,7 @@ def match_name_to_type(db, table_name, trg_schema=None, faker_list=[]):
     from Levenshtein import ratio
 
     import sqlalchemy
-    import pprint
+
     if trg_schema is None:
         schema = db.schema
     else:
@@ -460,7 +438,7 @@ def match_name_to_type(db, table_name, trg_schema=None, faker_list=[]):
         match_name = None
         try:  # if string , varchar text..etc
 
-            col_length = col.type.length
+            #col_length = col.type.length
 
             for provider in faker_list:
                 # print(type(provider),provider)
@@ -492,7 +470,7 @@ def match_name_to_type(db, table_name, trg_schema=None, faker_list=[]):
 def get_table_column_types(db: postgres.DB, table_name, trg_schema=None):
 
     import sqlalchemy
-    import pprint
+
     if trg_schema is None:
         schema = db.schema
     else:
@@ -505,11 +483,11 @@ def get_table_column_types(db: postgres.DB, table_name, trg_schema=None):
     table = sqlalchemy.Table(table_name.split(
         '.')[-1], schema_meta, schema=schema, autoload=True, autoload_with=con)
     cols = OrderedDict()
-    x,y=db.query(f"select * from {table_name} limit 1")
+    x, y = db.query(f"select * from {table_name} limit 1")
 
-    ordered_column_list=[col for col in y]
-    #print(ordered_column_list)
-        
+    ordered_column_list = [col for col in y]
+    # print(ordered_column_list)
+
     for col in table.columns:
         col_length = None
         try:
@@ -521,24 +499,23 @@ def get_table_column_types(db: postgres.DB, table_name, trg_schema=None):
             pass
         str_type = str(col.type)
         order = 0
-        found=False
-        for i,ee in enumerate(ordered_column_list):
-             
-            if ee.name==col.name:
-                order=i+1
-                
-        if i==0:
+        found = False
+        for i, ee in enumerate(ordered_column_list):
+
+            if ee.name == col.name:
+                order = i+1
+
+        if i == 0:
             raise Exception("column not found")
-                 
-                 
+
         #cols[str(col).split('.')[-1]] = [str_type,order]
-        cols[order] = [str(col).split('.')[-1],str_type]
-    cols2=OrderedDict()
-    print(cols)
-    for i,column in enumerate(cols):
-        
-        cols2[cols[column][0]]=cols[column][1]
-    
+        cols[order] = [str(col).split('.')[-1], str_type]
+    cols2 = OrderedDict()
+
+    for i, column in enumerate(cols):
+
+        cols2[cols[column][0]] = cols[column][1]
+
     return (cols2)
 
 
@@ -581,26 +558,24 @@ def main(yamlfile=None, p_output=None, p_generate=None, out_path=None):
     generate_yaml = p_generate or args.of
     output = p_output or args.o
     yaml_data = None
-    print(yaml_file)
+
     with open(yaml_file) as f:
         #yaml_data = yaml.safe_load((f))
-        yaml_data=ordered_load(f, yaml.SafeLoader)
+        yaml_data = ordered_load(f, yaml.SafeLoader)
 
     logging.info('Read YAML file: \n\t\t{}'.format(yaml_file))
     set_log_level(args.ll)
     yaml_dict, db_conn = pre_process_yaml(yaml_file)
     if generate_yaml is not None:
-        print("here2---------------")
+
         if output == 'SUGGEST':
-            print("here---------------3")
+
             generate_yaml_from_db_suggest(db_conn, generate_yaml, yaml_data)
-        else :
-            
-            pprint.pprint(yaml_data)
+        else:
             generate_yaml_from_db(db_conn, generate_yaml, yaml_data)
     else:
         # map each column to a faker function
-        
+
         tables = map_fake_functions('Tables', yaml_dict)
         for table in tables.keys():
 
