@@ -14,11 +14,9 @@ import re
 from collections import OrderedDict
 
 lg.basicConfig()
-logging = lg.getLogger()
-# logging.setLevel(lg.INFO)
-logging.setLevel(lg.INFO)
-
-WORKINGPATH = os.environ.get('WORKINGPATH', None)
+logging = lg.getLogger('fake-me-some')
+ 
+ 
 
 
 def ordered_load(stream, Loader=yaml.Loader, object_pairs_hook=OrderedDict):
@@ -155,14 +153,10 @@ def map_fake_functions(root, yaml_data):
         t = tables[tbl]
         if t is not None:
             for col in t.keys():
-                column_type = t[col]
-
-                # print("--------------zzzz-",col,t,tbl)
-                # print("-------xxx-----yyy---",col,column_type)
+                column_type = t[col] 
                 if str(column_type).startswith('providers.'):
                     xx = fake_data(column_type)
-                    t[col] = xx
-                    # column_type=xx
+                    t[col] = xx 
 
                 elif (str(column_type).upper().startswith('NUMERIC')
                         or str(column_type).upper().startswith('DOUBLE')
@@ -317,9 +311,7 @@ def generate_yaml_from_db_suggest(db_conn, file_fqn, yaml_data):
         os.path.abspath(__file__)), "provider.yml")
     with open(faker_file, "r") as f:
         faker_list = yaml.safe_load(f)
-        # for row in f:
-        #     faker_list.append(row)
-        # pass
+   
 
     fqn = os.path.abspath(file_fqn)
     table_list = db_conn.get_all_tables()
@@ -342,7 +334,7 @@ def generate_yaml_from_db_suggest(db_conn, file_fqn, yaml_data):
         merge_dict_file(tables, fqn, yaml_data)
 
 
-def parse_cli_args():
+def parse_cli_args(yamlfile=None):
     parser = argparse.ArgumentParser(prog='fake_me_some', usage="""%(prog)s [options]
     MAKE A config.yaml like this if you don't have one:
     db:
@@ -354,18 +346,25 @@ def parse_cli_args():
         schema: "test"
         userid: 'docker'
         password_envir_var: PGPASSWORD """)
-
-    parser.add_argument('--y', default='config.yaml',
+    print("---------------------",yamlfile)
+    if yamlfile is None:
+        require_yaml=True
+    else:
+        require_yaml=False
+    parser.add_argument('--y','--yaml', required=require_yaml,default=yamlfile,
                         help='path to yaml file')
-    parser.add_argument('--of', default=None,
-                        help='new yaml file to dump to')
+    parser.add_argument('--of','--outfile', default=None,
+                        help='new configuration yaml file to dump to with table description')
     parser.add_argument('--rows', default=10,
                         help='Number of Rows to Fake')
     parser.add_argument('--o', default='CSV',
                         help='output data to CSV, DB, PARQUET')
+    parser.add_argument('--d','--dir',default=None,
+                        help='output_directory')
     parser.add_argument('--ll', default='INFO',
-                        help='Default Log Level')
+                        help='Logging mode: DEBUG INFO WARN ERROR')
     args = parser.parse_args()
+    
     return args
 
 
@@ -386,12 +385,6 @@ def fake_some_data_parquet(file_path, table, num_rows):
     header = [col for col in table.keys()]
 
     df = pd.DataFrame.from_records(rows, columns=header)
-
-    # df = pd.DataFrame({'one': [-1, np.nan, 2.5],
-    #                 'two': ['foo', 'bar', 'baz'],
-    #                 'three': [True, False, True]},
-    #                 index=list('abc'))
-
     table = pa.Table.from_pandas(df)
     pq.write_table(table, file_path)
 
@@ -437,9 +430,7 @@ def match_name_to_type(db, table_name, trg_schema=None, faker_list=[]):
         closes_distance = 0.0
         match_name = None
         try:  # if string , varchar text..etc
-
-            #col_length = col.type.length
-
+ 
             for provider in faker_list:
                 # print(type(provider),provider)
                 for fake in faker_list[provider]:
@@ -508,7 +499,6 @@ def get_table_column_types(db: postgres.DB, table_name, trg_schema=None):
         if i == 0:
             raise Exception("column not found")
 
-        #cols[str(col).split('.')[-1]] = [str_type,order]
         cols[order] = [str(col).split('.')[-1], str_type]
     cols2 = OrderedDict()
 
@@ -542,15 +532,15 @@ def fake_some_data_csv(file_path, table, num_rows):
 
 def main(yamlfile=None, p_output=None, p_generate=None, out_path=None):
     # process_list = []
-    args = parse_cli_args()
+    args = parse_cli_args(yamlfile)
     # multi process here for now
     # process_yaml(args.yaml, args.log_level)
-    path = None
+    path = args.d
     if out_path is None:
         path = os.getcwd()
     else:
         path = os.path.abspath(out_path)
-    yaml_file = None
+    yaml_file = args.y
     if not yamlfile is None:
         yaml_file = os.path.abspath(yamlfile)
     else:

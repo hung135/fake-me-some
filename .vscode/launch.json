@@ -4,12 +4,19 @@
     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
+
+
+
+ 
         {
-            "name": "Python: test_fake-me-some",
+            "name": "Debug-Test",
             "type": "python",
             "request": "launch",
-            "program": "/workspace/tests/test_fake-me-some.py",
-            "console": "integratedTerminal"
-        }
+            "program": "/usr/local/bin/pytest",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}/tests/",
+            "args": ["--no-cov"]
+	            } 
     ]
 }
+
