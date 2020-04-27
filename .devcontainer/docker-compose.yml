@@ -24,7 +24,7 @@ services:
       PGDATABASE: postgres
       PGUSER: docker
       PGPASSWORD: docker
-      PYTHONPATH: /workspace/src
+      PYTHONPATH: /workspace/src:/workspace/src/fake_me_some
       PGPORT: 5432
     
   pgdb:
