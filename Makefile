@@ -9,7 +9,7 @@ GIT_HASH_URL:=$(shell git remote -v | head -n1 | sed -e"s/\t/ /g" | cut -d " " -
 # 	echo "Building ALL"
 build: clean 
 	#python setup.py sdist bdist_wheel build
-	python setup.py build
+	python setup.py sdist bdist_wheel build
 dist:
 	#python setup.py sdist bdist_wheel build
 	python setup.py dist
